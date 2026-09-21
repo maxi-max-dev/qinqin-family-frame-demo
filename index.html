@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#15232d">
+  <meta name="description" content="亲亲 · 家人相框：让日常照片和声音住进家里的相框。">
+  <title>亲亲 · 家人相框</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="亲亲家人相框首页">
+      <span class="brand-mark" aria-hidden="true">亲</span>
+      <span><strong>亲亲</strong><small>家人相框</small></span>
+    </a>
+    <div class="demo-note"><span class="status-dot"></span>本机演示 · 通话模拟</div>
+    <button class="text-button" id="resetBtn" type="button">清除此演示数据</button>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="intro-row" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">给想念一个固定的位置 <span>·</span> HOME / 01</p>
+        <h1 id="pageTitle">照片到了，<em>人也在。</em></h1>
+        <p class="intro-copy">家人随手发一张照片，奶奶在相框里看见、听见，还能用一句话回过去。</p>
+      </div>
+      <button class="replay-button" id="demoBtn" type="button"><span class="play-icon">▶</span><span><strong>播放一遍家庭日常</strong><small>孙子发照片 → 奶奶回留言</small></span></button>
+    </section>
+
+    <nav class="mode-tabs" aria-label="预览端切换">
+      <button class="mode-tab is-active" type="button" data-mode="elder"><span class="tab-icon">▣</span>奶奶的相框</button>
+      <button class="mode-tab" type="button" data-mode="family"><span class="tab-icon">▤</span>家人的手机</button>
+      <button class="mode-tab" type="button" data-mode="split"><span class="tab-icon">◫</span>双端同屏</button>
+    </nav>
+
+    <div class="workspace" id="workspace">
+      <aside class="control-column">
+        <section class="side-card people-card">
+          <div class="card-heading"><div><p class="eyebrow">固定联系人</p><h2>想找谁？</h2></div><span class="counter">3 位</span></div>
+          <div class="people-list" id="peopleList"></div>
+          <p class="tiny-help">老人只需点名字，或点一下说话。</p>
+        </section>
+
+        <section class="side-card activity-card">
+          <div class="card-heading"><div><p class="eyebrow">最近收到</p><h2>家里的小事</h2></div><span class="counter" id="photoCount">4 张</span></div>
+          <div class="activity-list" id="activityList"></div>
+        </section>
+
+        <section class="side-card voice-card">
+          <div class="voice-card-top"><div><p class="eyebrow">一句话就好</p><h2>对相框说</h2></div><span class="mic-pip">●</span></div>
+          <p>试试：“下一张”或“给孙子打电话”</p>
+          <button class="voice-cta" id="voiceBtn" type="button"><span>🎙</span><span id="voiceBtnText">点一下说话</span></button>
+          <div class="voice-examples" id="voiceExamples" hidden>
+            <button type="button" data-command="下一张">下一张</button>
+            <button type="button" data-command="再听一遍">再听一遍</button>
+            <button type="button" data-command="给孙子打电话">给孙子打电话</button>
+          </div>
+          <p class="support-note" id="voiceSupport">浏览器支持语音识别时可直接说话</p>
+        </section>
+      </aside>
+
+      <section class="stage-column" aria-live="polite">
+        <div class="stage-meta"><span id="stageLabel">奶奶的相框</span><span class="live-pill"><i></i> 本机演示中</span></div>
+        <div class="devices" id="devices">
+          <article class="device-wrap elder-wrap" id="elderPreview">
+            <div class="device-label"><span class="device-dot elder-dot"></span>相框端 <strong>奶奶的房间</strong></div>
+            <div class="elder-device">
+              <div class="device-screen">
+                <div class="screen-bar"><span id="clockText">今天 09:41</span><span>家里 · 在线</span></div>
+                <div class="photo-frame" id="photoFrame">
+                  <img id="elderPhoto" src="assets/family-living.jpg" alt="家人坐在客厅里">
+                  <div class="photo-overlay"><span class="photo-tag" id="photoTag">来自孙子</span><span class="photo-position" id="photoPosition">1 / 4</span></div>
+                </div>
+                <div class="photo-copy"><p class="photo-caption" id="photoCaption">今天在海边散步，想你啦！</p><p class="photo-time" id="photoTime">今天 · 09:32</p></div>
+                <div class="listen-strip"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="audioLabel">听这张照片的介绍 / 朗读文字</span><button class="mini-play" id="listenBtn" type="button" aria-label="朗读照片介绍">▶</button></div>
+              </div>
+              <div class="physical-keys" aria-label="相框实体按键">
+                <button class="physical-key" id="prevBtn" type="button"><span>←</span><small>上一张</small></button>
+                <button class="physical-key talk-key" id="speakBtn" type="button"><span>◉</span><small>留言</small></button>
+                <button class="physical-key" id="nextBtn" type="button"><span>→</span><small>下一张</small></button>
+              </div>
+            </div>
+          </article>
+
+          <article class="device-wrap family-wrap" id="familyPreview" hidden>
+            <div class="device-label"><span class="device-dot family-dot"></span>手机端 <strong>孙子的手机</strong></div>
+            <div class="phone-device">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <div class="phone-head"><span class="back-arrow">‹</span><div><strong>亲亲</strong><small>发给奶奶的相框</small></div><span class="avatar-chip">孙</span></div>
+                <div class="recipient-line"><span class="tiny-avatar">奶</span><span>正在发给 <strong>奶奶</strong></span><span class="check-mark">✓</span></div>
+                <form class="upload-box" id="uploadForm">
+                  <input id="photoInput" type="file" accept="image/*" aria-label="选择要发送的照片">
+                  <label for="photoInput" class="upload-placeholder" id="uploadPlaceholder"><span class="upload-plus">＋</span><strong>放一张今天的照片</strong><small>支持 JPG / PNG，自动压缩到适合相框的大小</small></label>
+                  <img class="upload-preview" id="uploadPreview" alt="待发送照片预览" hidden>
+                </form>
+                <label class="field-label" for="photoDescription">写一句话 <span>可选</span></label>
+                <textarea id="photoDescription" rows="2" placeholder="例如：今天的花开得特别好看。"></textarea>
+                <div class="sender-row"><span>署名</span><select id="senderSelect"><option value="grandson">孙子 · 小宇</option><option value="daughter">女儿 · 丽丽</option><option value="granddaughter">外孙女 · 安安</option></select></div>
+                <button class="primary-button" id="sendPhotoBtn" type="submit" form="uploadForm">发送到奶奶的相框 <span>→</span></button>
+                <p class="form-feedback" id="uploadFeedback" role="status"></p>
+                <div class="phone-rule"></div>
+                <div class="inbox-head"><strong>奶奶的回音</strong><span id="messageCount">2 条</span></div>
+                <div class="inbox" id="inbox"></div>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="stage-foot"><span><b>提示</b> 所有按钮都可以试一遍</span><span>键盘也能操作 · <kbd>Tab</kbd> 聚焦</span></div>
+      </section>
+    </div>
+
+    <section class="how-row" aria-label="工作方式">
+      <div class="how-intro"><p class="eyebrow">每一天都能接上</p><h2>不需要学习，<br>只需要想起。</h2></div>
+      <div class="how-step"><span class="step-icon">✦</span><strong>家人发来照片</strong><p>从手机选一张，写下今天的事，署上名字。</p></div>
+      <div class="how-step"><span class="step-icon">◒</span><strong>相框大字显示</strong><p>照片、描述和声音在奶奶面前安静出现。</p></div>
+      <div class="how-step"><span class="step-icon">⌁</span><strong>奶奶回一句话</strong><p>点一下开始录音，或者打字，家人马上收到。</p></div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="modal call-modal" id="callModal" aria-labelledby="callTitle">
+    <div class="call-modal-head"><span class="call-spark">✦</span><span class="demo-call-label">演示通话</span><button class="modal-close" id="closeCallBtn" type="button" aria-label="关闭">×</button></div>
+    <div class="call-person"><div class="call-avatar" id="callAvatar">孙</div><p id="callTitle">孙子 · 小宇</p><span id="callStatus">等待选择</span></div>
+    <p class="call-explain">这是本机里的演示通话，不会拨出真实电话。</p>
+    <div class="call-actions"><button class="call-action answer" id="answerCallBtn" type="button">接听</button><button class="call-action hangup" id="hangupCallBtn" type="button">挂断</button><button class="call-action leave" id="leaveMessageBtn" type="button">转留言</button></div>
+  </dialog>
+
+  <dialog class="modal message-modal" id="messageModal" aria-labelledby="messageTitle">
+    <div class="modal-close-row"><span class="eyebrow">奶奶的回音</span><button class="modal-close" id="closeMessageBtn" type="button" aria-label="关闭">×</button></div>
+    <h2 id="messageTitle">留一句话给家人</h2>
+    <p class="modal-copy">可以打字，也可以点按钮开始录音。</p>
+    <textarea id="messageInput" rows="3" placeholder="例如：看到了，花真好看。"></textarea>
+    <div class="message-modal-actions"><button class="secondary-button" id="recordBtn" type="button"><span>●</span><span id="recordBtnText">开始录音</span></button><button class="primary-button" id="saveMessageBtn" type="button">送出去 <span>→</span></button></div>
+    <p class="form-feedback" id="messageFeedback" role="status"></p>
+    <audio id="recordingPlayer" controls hidden></audio>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
