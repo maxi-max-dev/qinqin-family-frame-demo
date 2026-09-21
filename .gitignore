@@ -4,3 +4,7 @@ qa/
 screenshots/
 *.har
 *.log
+.env
+.env.*
+!.env.example
+.local/

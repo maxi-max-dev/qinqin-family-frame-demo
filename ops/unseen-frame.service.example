@@ -1,0 +1,31 @@
+# Candidate only. Render REQUIRED_FRAME_SHA and review before installing.
+[Unit]
+Description=UNSEEN Frame isolated account shell
+After=network.target unseen-operable.service
+Wants=unseen-operable.service
+
+[Service]
+Type=simple
+User=unseen
+Group=unseen
+WorkingDirectory=/opt/unseen-frame/releases/REQUIRED_FRAME_SHA
+Environment=NODE_ENV=production
+Environment=PORT=4620
+Environment=FRAME_BIND_HOST=127.0.0.1
+Environment=FRAME_PUBLIC_ORIGIN=https://unseenframe.maxxam.xyz
+Environment=FRAME_STATIC_ROOT=/opt/unseen-frame/releases/REQUIRED_FRAME_SHA
+Environment=FRAME_ENABLE_CANONICAL_PROXY=1
+Environment=CANONICAL_UPSTREAM=http://127.0.0.1:4300
+Environment=CANONICAL_PUBLIC_ORIGIN=https://unseen.maxxam.xyz
+ExecStart=/usr/local/bin/node /opt/unseen-frame/releases/REQUIRED_FRAME_SHA/server.mjs
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/unseen-frame
+UMask=027
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+# Candidate only. Add after unseenframe DNS resolves and the Frame service is independently healthy.
+unseenframe.maxxam.xyz {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	reverse_proxy 127.0.0.1:4620 {
+		header_up Host {host}
+		header_up X-Forwarded-Proto https
+	}
+}

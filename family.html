@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4eff8">
+  <meta name="description" content="UNSEEN Frame · 登录你的家庭相框">
+  <title>UNSEEN Frame · 登录家庭</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="family.css?v=2">
+</head>
+<body>
+  <header class="family-topbar">
+    <a class="family-brand" href="index.html" aria-label="回到 UNSEEN Frame 演示首页"><span class="family-mark">U</span><span><strong>UNSEEN Frame</strong><small>真实家庭空间</small></span></a>
+    <div class="family-account" id="accountBar" hidden><span id="accountName"></span><button type="button" id="logoutBtn">退出账号</button></div>
+  </header>
+  <main class="family-shell" id="app" aria-live="polite">
+    <section class="family-card auth-card" id="authView">
+      <p class="eyebrow">家庭相框</p>
+      <h1>登录，打开家里的照片。</h1>
+      <p class="lead">使用已有 UNSEEN 账号。家庭照片和留言留在你有权限的私有空间里。</p>
+      <form id="loginForm" class="stack-form">
+        <label>用户名<input name="username" autocomplete="username" required autocapitalize="none" spellcheck="false"></label>
+        <label>密码<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="primary-action" type="submit" id="loginBtn">登录家庭 <span>→</span></button>
+        <p class="form-status" id="loginStatus" role="status"></p>
+      </form>
+      <p class="auth-note">还没有账号？请先在 UNSEEN 完成账号开通，再回到这里登录。</p>
+    </section>
+
+    <section class="family-card space-card" id="spaceView" hidden>
+      <div class="view-head"><div><p class="eyebrow">已登录</p><h1>选择一个家庭空间</h1><p class="lead">相框只会显示当前账号有权限查看的照片。</p></div><span class="secure-pill">私有空间</span></div>
+      <div class="space-list" id="spaceList"></div>
+      <p class="form-status" id="spaceStatus" role="status"></p>
+    </section>
+
+    <section class="family-card frame-card" id="frameView" hidden>
+      <div class="view-head frame-head"><div><p class="eyebrow">家庭相框</p><h1 id="spaceName">家庭空间</h1><p class="lead" id="accountHint"></p></div><div class="frame-actions"><button type="button" class="quiet-action" id="changeSpaceBtn">换空间</button><button type="button" class="quiet-action" id="refreshBtn">刷新</button></div></div>
+      <div class="frame-tabs" role="tablist" aria-label="相框端与家属端"><button type="button" class="frame-tab is-active" data-mode="elder" role="tab" aria-selected="true">老人相框</button><button type="button" class="frame-tab" data-mode="family" role="tab" aria-selected="false">家属手机</button></div>
+      <section class="frame-layout" id="elderPanel" aria-label="老人相框">
+        <div class="elder-stage"><div class="status-line"><span id="statusCopy">正在打开照片</span><span id="photoPosition">0 / 0</span></div><div class="real-photo-wrap"><img id="realPhoto" alt="家庭照片"><span class="status-ring" id="statusRing" aria-hidden="true"></span></div><h2 id="photoTitle">还没有照片</h2><p class="photo-credit" id="photoCredit"></p><div class="elder-controls"><button type="button" id="previousBtn">上一张</button><button type="button" class="primary-action" id="replyBtn">留言</button><button type="button" id="nextBtn">下一张</button></div><div class="elder-secondary"><button type="button" class="quiet-action" id="readBtn">朗读照片</button><span>文字和原声都来自这个空间</span></div></div>
+        <aside class="story-panel"><div class="panel-heading"><h2>照片留言</h2><span id="storyCount">0 条</span></div><div id="storyList"><p class="empty-copy">还没有留言。</p></div></aside>
+      </section>
+      <section class="family-panel" id="familyPanel" hidden aria-label="家属手机"><div class="upload-panel"><div class="panel-heading"><h2>从手机留下照片</h2><span id="uploadPermission"></span></div><form id="uploadForm" class="stack-form"><label>选择照片<input type="file" name="photos" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" required></label><label>给家里写一句话<span class="optional">可选</span><textarea name="caption" rows="3" maxlength="1000" placeholder="例如：今天在海边散步，想你啦。"></textarea></label><label class="consent-label"><input type="checkbox" name="consent" required>我有权把这些照片加入家庭空间，并同意按空间权限展示。</label><button type="submit" class="primary-action" id="uploadBtn">上传照片 <span>→</span></button><p class="form-status" id="uploadStatus" role="status"></p></form></div><div class="reply-panel"><div class="panel-heading"><h2>给当前照片留言</h2><span>关联当前照片</span></div><form id="storyForm" class="stack-form"><label>署名<input name="authorCredit" maxlength="80" required></label><label>文字留言<textarea name="text" rows="3" maxlength="2000" placeholder="写一句想说的话"></textarea></label><div class="record-row"><button type="button" class="quiet-action" id="recordBtn">开始录音</button><span id="recordStatus">也可以只写文字</span></div><button type="submit" class="primary-action" id="storyBtn">留下留言 <span>→</span></button><p class="form-status" id="storyStatus" role="status"></p></form></div></section>
+      <div class="family-footer"><button type="button" class="quiet-action" id="backToSpacesBtn">返回家庭空间</button><p id="frameStatus" role="status"></p></div>
+    </section>
+  </main>
+  <script type="module" src="family.js?v=2"></script>
+</body>
+</html>
