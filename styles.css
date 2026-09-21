@@ -235,6 +235,64 @@ kbd { background: var(--paper-deep); border: 1px solid var(--line); border-radiu
 }
 
 [hidden] { display: none !important; }
+
+/* UNSEEN Frame skin: familiar v2 lavender, cloud-blue and gilt, with the frame kept quiet. */
+:root {
+  --ink: #43395d;
+  --ink-soft: #776d8b;
+  --paper: #f6f2fa;
+  --paper-deep: #eeeaf6;
+  --sun: #e4c17b;
+  --sun-soft: #f8eed7;
+  --coral: #d58dab;
+  --coral-dark: #a96183;
+  --mint: #c7dfdf;
+  --white: #fffdfb;
+  --line: rgba(117, 100, 145, .2);
+  --shadow: 0 20px 60px rgba(87, 69, 112, .13);
+}
+body { background: linear-gradient(145deg, #fcf8f3, #f3effa 56%, #edf5fb); }
+.topbar { background: rgba(252, 248, 243, .88); border-bottom-color: rgba(117,100,145,.16); }
+.brand-mark { background: var(--coral); color: #fffdfb; transform: rotate(-5deg); }
+.brand strong { letter-spacing: .01em; }
+.brand small { color: var(--ink-soft); }
+.account-link { color: var(--ink-soft); font-size: 11px; text-decoration: none; white-space: nowrap; }
+.account-link:hover { color: var(--coral-dark); text-decoration: underline; text-underline-offset: 4px; }
+.demo-note { color: var(--ink-soft); }
+.demo-tools summary { background: var(--sun); border-color: rgba(117,100,145,.18); }
+.demo-controls button:hover, .demo-controls button:focus-visible { background: var(--sun-soft); }
+.mode-tabs { border-bottom-color: rgba(117,100,145,.18); }
+.mode-tab:hover, .mode-tab.is-active { border-color: var(--coral); color: var(--ink); }
+.tab-icon { color: var(--coral-dark); }
+.elder-device { background: #fffafd; border-color: #fff; box-shadow: 0 20px 60px rgba(87,69,112,.15), inset 0 0 0 1px rgba(255,255,255,.85); }
+.device-screen { background: #f7f2fb; }
+.photo-frame { background: #342d47; }
+.physical-key { background: #e9d7aa; border-radius: 14px; box-shadow: 0 5px 16px rgba(117,90,55,.16); color: var(--ink); }
+.physical-key:hover { background: #f2dfb8; }
+.talk-key { background: var(--coral); color: var(--white); }
+.talk-key:hover { background: #df9bb6; }
+.reminder-ring.is-photo { border-color: #e1c071; box-shadow: 0 0 0 4px rgba(225,192,113,.18), 0 0 24px rgba(225,192,113,.42); }
+.reminder-ring.is-message { border-color: #7b99de; box-shadow: 0 0 0 4px rgba(123,153,222,.17), 0 0 24px rgba(123,153,222,.42); }
+.reminder-ring.is-call { border-color: #78b98d; box-shadow: 0 0 0 4px rgba(120,185,141,.17), 0 0 24px rgba(120,185,141,.42); }
+.reminder-banner { background: #fffdfb; }
+.reminder-banner.is-message { border-left-color: #7b99de; }
+.reminder-banner.is-call { border-left-color: #78b98d; }
+.reminder-banner button { background: var(--ink); }
+.elder-tool { background: #fffdfb; border-color: rgba(117,100,145,.2); color: var(--ink); }
+.elder-tool:hover, .elder-tool.is-listening { background: var(--sun-soft); }
+.phone-device { background: #4b4165; border-color: #3c3453; }
+.phone-screen { background: #fffdfb; }
+.primary-button, .family-message-form button { background: var(--coral); }
+.primary-button:hover, .family-message-form button:hover { background: #c9799b; }
+.secondary-button { background: var(--paper-deep); }
+.modal { color: var(--ink); }
+@media (max-width: 760px) {
+  .demo-note { display: none; }
+  .account-link { font-size: 10px; }
+  .topbar { gap: 10px; padding-inline: 14px; }
+  .brand strong { font-size: 16px; }
+  .brand small { font-size: 9px; }
+}
 .elder-tools { position: absolute; top: 8px; right: 8px; left: 8px; z-index: 3; display: flex; gap: 8px; margin: 0; }
 .elder-tool { background: var(--white); border: 1px solid var(--line); border-radius: 5px; color: var(--ink); font-size: 17px; min-height: 48px; padding: 8px 12px; }
 .elder-tool:hover, .elder-tool.is-listening { background: var(--sun-soft); }

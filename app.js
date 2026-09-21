@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'qinqin-family-frame:v1';
-  const CHANNEL_NAME = 'qinqin-family-frame';
+  const STORAGE_KEY = 'unseen-frame-demo:v1';
+  const CHANNEL_NAME = 'unseen-frame-demo';
   const photoDefaults = [
     { id: 'living', src: 'assets/family-living.jpg', caption: '今天在海边散步，想你啦！', sender: 'grandson', senderName: '孙子 · 小宇', time: '今天 · 09:32' },
     { id: 'garden', src: 'assets/child-garden.jpg', caption: '今天在窗边晒太阳，想跟你聊聊天。', sender: 'granddaughter', senderName: '外孙女 · 安安', time: '昨天 · 16:18' },
@@ -128,7 +128,7 @@
     const reminder = currentReminder();
     if (!reminder) return;
     if (reminder.kind === 'call') {
-      openCall(state.lastSender || 'grandson');
+      openCall(state.lastSender || 'grandson', 'incoming');
       return;
     }
     if (reminder.kind === 'message') {
@@ -151,7 +151,9 @@
   }
 
   function triggerDemo(kind) {
+    if (kind === 'reset') { resetData(); return; }
     if (kind === 'photo') {
+      state.photos.forEach(photo => { photo.unread = false; });
       state.photos[0].unread = true;
       state.currentPhoto = 0;
       showToast('演示：新照片到了');
@@ -197,7 +199,7 @@
     $('#photoTag').textContent = `来自${photo.senderName.split(' · ')[0]}`;
     $('#photoPosition').textContent = `${state.currentPhoto + 1} / ${state.photos.length}`;
     $('#photoTime').textContent = photo.time;
-    if ($('#audioLabel')) $('#audioLabel').textContent = photo.audio ? `收到一段来自${photo.senderName.split(' · ')[0]}的语音留言` : '听这张照片的介绍 / 朗读文字';
+    if ($('#audioLabel')) $('#audioLabel').textContent = photo.audio ? `收到一段来自${photo.senderName.split(' · ')[0]}的语音留言` : '用这台设备朗读照片文字';
   }
 
   function renderInbox() {
@@ -214,7 +216,7 @@
     const familyVisible = mode === 'family' || mode === 'split';
     $('#elderPreview').hidden = !elderVisible;
     $('#familyPreview').hidden = !familyVisible;
-    $('#stageLabel').textContent = mode === 'split' ? '双端同屏' : mode === 'family' ? '家人的手机' : '奶奶的相框';
+    $('#stageLabel').textContent = mode === 'split' ? '双端同屏' : mode === 'family' ? '家属手机' : '老人相框 · 奶奶的房间';
     $('#devices').classList.toggle('is-split', mode === 'split');
     $('#workspace').className = `workspace is-${mode}`;
   }
@@ -237,7 +239,7 @@
     utterance.lang = 'zh-CN';
     utterance.rate = .9;
     window.speechSynthesis.speak(utterance);
-    showToast('正在为你朗读');
+    showToast('正在用这台设备朗读');
   }
 
   function listenCurrent() {
@@ -258,12 +260,17 @@
     toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 3000);
   }
 
-  function openCall(personId = 'grandson') {
+  function openCall(personId = 'grandson', direction = 'outgoing') {
     const person = people.find(item => item.id === personId) || people[0];
+    const incoming = direction === 'incoming';
+    const shortName = person.detail.split(' · ')[0];
     $('#callAvatar').textContent = person.initial;
-    $('#callTitle').textContent = `${person.name} · ${person.detail.split(' · ')[0]}`;
-    $('#callStatus').textContent = '等待选择';
+    $('#callTitle').textContent = `${person.name} · ${shortName}`;
+    $('#callStatus').textContent = incoming ? '等待接听' : '正在呼叫（演示）';
+    $('#answerCallBtn').textContent = incoming ? '接听' : '模拟接通';
+    $('#answerCallBtn').disabled = false;
     $('#callModal').dataset.person = person.id;
+    $('#callModal').dataset.direction = direction;
     if (typeof $('#callModal').showModal === 'function') $('#callModal').showModal();
     else $('#callModal').setAttribute('open', '');
   }
@@ -490,6 +497,8 @@
     $('#voiceBtn').classList.add('is-listening');
     $('#voiceBtn').setAttribute('aria-label', '取消语音识别');
     $('#voiceBtnText').textContent = '取消识别 · 正在听';
+    $('#voiceExamples').hidden = false;
+    $('#voiceSupport').textContent = '也可以直接点一句示例';
     recognition.addEventListener('result', event => {
       const transcript = event.results?.[0]?.[0]?.transcript?.trim();
       if (!transcript) return;
@@ -511,16 +520,17 @@
   }
 
   function resetData() {
+    if (!window.confirm('只清除本机的 UNSEEN Frame 演示照片、留言和录音，真实账号空间不受影响。继续吗？')) return;
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) { /* ignore */ }
     state = initialState(); selectedFile = null; pendingRecording = null;
     persist('重置演示数据');
-    renderAll(); setMode('elder'); showToast('已清除这个演示的数据，示例内容回来了。');
+    renderAll(); setMode('elder'); showToast('已重置演示，示例内容回来了。');
   }
 
   function escapeHtml(value) { return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
   function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, '&#96;'); }
 
-  $$('.mode-tab').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
+  $$('[data-mode]').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
   $('#prevBtn').addEventListener('click', () => movePhoto(-1));
   $('#nextBtn').addEventListener('click', () => movePhoto(1));
   $('#speakBtn').addEventListener('click', () => openMessage());
@@ -535,10 +545,10 @@
   $('#peopleList').addEventListener('click', event => { const button = event.target.closest('[data-call]'); if (button) openCall(button.dataset.call); });
   $('#elderPeopleList').addEventListener('click', event => { const button = event.target.closest('[data-call]'); if (button) openCall(button.dataset.call); });
   $('#activityList').addEventListener('click', event => { const button = event.target.closest('[data-photo-id]'); const index = state.photos.findIndex(photo => photo.id === button?.dataset.photoId); if (index >= 0) { state.currentPhoto = index; persist('选择照片'); renderPhotos(); } });
-  $('#voiceExamples').addEventListener('click', event => { const button = event.target.closest('[data-command]'); if (button) runVoiceCommand(button.dataset.command); });
+  $('#voiceExamples').addEventListener('click', event => { const button = event.target.closest('[data-command]'); if (button) { runVoiceCommand(button.dataset.command); if (activeRecognition) finishVoiceRecognition(); } });
   $('#voiceExamples').addEventListener('click', event => { if (event.target.closest('.close-examples')) $('#voiceExamples').hidden = true; });
   $('#closeCallBtn').addEventListener('click', () => closeDialog('#callModal'));
-  $('#answerCallBtn').addEventListener('click', () => { state.callActive = false; persist('接听演示来电'); renderAll(); callStatus('已接听 · 这是演示通话'); });
+  $('#answerCallBtn').addEventListener('click', () => { const incoming = $('#callModal').dataset.direction === 'incoming'; state.callActive = false; persist(incoming ? '接听演示来电' : '模拟接通演示呼叫'); renderAll(); $('#answerCallBtn').textContent = '已接通'; $('#answerCallBtn').disabled = true; callStatus(incoming ? '已接听（演示）' : '通话中（演示）'); });
   $('#hangupCallBtn').addEventListener('click', () => { state.callActive = false; persist('结束演示来电'); renderAll(); callStatus('已挂断 · 没有拨出真实电话'); });
   $('#leaveMessageBtn').addEventListener('click', () => { closeDialog('#callModal'); openMessage('刚才没接到你的电话，给你留句话。'); });
   $('#closeMessageBtn').addEventListener('click', () => closeDialog('#messageModal'));
