@@ -7,7 +7,7 @@
   <meta name="description" content="亲亲 · 家人相框：让日常照片和声音住进家里的相框。">
   <title>亲亲 · 家人相框</title>
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -16,21 +16,14 @@
       <span><strong>亲亲</strong><small>家人相框</small></span>
     </a>
     <div class="demo-note"><span class="status-dot"></span>本机演示 · 通话模拟</div>
+    <details class="demo-tools top-demo"><summary>试试提醒</summary><div class="demo-controls" aria-label="演示提醒"><button type="button" data-demo="photo">新照片</button><button type="button" data-demo="message">新留言</button><button type="button" data-demo="call">来电</button></div></details>
     <button class="text-button" id="resetBtn" type="button">清除此演示数据</button>
   </header>
 
   <main id="top" class="shell">
-    <section class="intro-row" aria-labelledby="pageTitle">
-      <div>
-        <p class="eyebrow">给想念一个固定的位置 <span>·</span> HOME / 01</p>
-        <h1 id="pageTitle">照片到了，<em>人也在。</em></h1>
-        <p class="intro-copy">家人随手发一张照片，奶奶在相框里看见、听见，还能用一句话回过去。</p>
-      </div>
-      <button class="replay-button" id="demoBtn" type="button"><span class="play-icon">▶</span><span><strong>播放一遍家庭日常</strong><small>孙子发照片 → 奶奶回留言</small></span></button>
-    </section>
+    <section class="intro-row" aria-labelledby="pageTitle"><h1 id="pageTitle">亲亲相框</h1></section>
 
     <nav class="mode-tabs" aria-label="预览端切换">
-      <button class="mode-tab is-active" type="button" data-mode="elder"><span class="tab-icon">▣</span>奶奶的相框</button>
       <button class="mode-tab" type="button" data-mode="family"><span class="tab-icon">▤</span>家人的手机</button>
       <button class="mode-tab" type="button" data-mode="split"><span class="tab-icon">◫</span>双端同屏</button>
     </nav>
@@ -51,13 +44,7 @@
         <section class="side-card voice-card">
           <div class="voice-card-top"><div><p class="eyebrow">一句话就好</p><h2>对相框说</h2></div><span class="mic-pip">●</span></div>
           <p>试试：“下一张”或“给孙子打电话”</p>
-          <button class="voice-cta" id="voiceBtn" type="button"><span>🎙</span><span id="voiceBtnText">点一下说话</span></button>
-          <div class="voice-examples" id="voiceExamples" hidden>
-            <button type="button" data-command="下一张">下一张</button>
-            <button type="button" data-command="再听一遍">再听一遍</button>
-            <button type="button" data-command="给孙子打电话">给孙子打电话</button>
-          </div>
-          <p class="support-note" id="voiceSupport">浏览器支持语音识别时可直接说话</p>
+          <p>语音找人已放在相框主面板。</p>
         </section>
       </aside>
 
@@ -66,21 +53,26 @@
         <div class="devices" id="devices">
           <article class="device-wrap elder-wrap" id="elderPreview">
             <div class="device-label"><span class="device-dot elder-dot"></span>相框端 <strong>奶奶的房间</strong></div>
-            <div class="elder-device">
+            <div class="elder-device" id="elderDevice">
+              <div class="reminder-ring" id="reminderRing" aria-hidden="true"></div>
               <div class="device-screen">
                 <div class="screen-bar"><span id="clockText">今天 09:41</span><span>家里 · 在线</span></div>
+                <div class="reminder-banner" id="reminderBanner" role="status" aria-live="polite" hidden><strong id="reminderText"></strong><button id="reminderAction" type="button"></button></div>
                 <div class="photo-frame" id="photoFrame">
                   <img id="elderPhoto" src="assets/family-living.jpg" alt="家人坐在客厅里">
+                  <div class="elder-tools"><button class="elder-tool" id="listenBtn" type="button">▶ 听照片</button><button class="elder-tool" id="voiceBtn" type="button"><span>🎙</span><span id="voiceBtnText">语音找人</span></button></div>
                   <div class="photo-overlay"><span class="photo-tag" id="photoTag">来自孙子</span><span class="photo-position" id="photoPosition">1 / 4</span></div>
                 </div>
                 <div class="photo-copy"><p class="photo-caption" id="photoCaption">今天在海边散步，想你啦！</p><p class="photo-time" id="photoTime">今天 · 09:32</p></div>
-                <div class="listen-strip"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span id="audioLabel">听这张照片的介绍 / 朗读文字</span><button class="mini-play" id="listenBtn" type="button" aria-label="朗读照片介绍">▶</button></div>
+                <div class="voice-examples elder-voice-examples" id="voiceExamples" hidden><button type="button" data-command="下一张">下一张</button><button type="button" data-command="再听一遍">再听一遍</button><button type="button" data-command="给孙子打电话">给孙子打电话</button><button class="close-examples" type="button" aria-label="关闭示例">×</button></div>
+                <p class="support-note elder-voice-support" id="voiceSupport">不支持语音时可点上面的示例</p>
               </div>
               <div class="physical-keys" aria-label="相框实体按键">
                 <button class="physical-key" id="prevBtn" type="button"><span>←</span><small>上一张</small></button>
                 <button class="physical-key talk-key" id="speakBtn" type="button"><span>◉</span><small>留言</small></button>
                 <button class="physical-key" id="nextBtn" type="button"><span>→</span><small>下一张</small></button>
               </div>
+              <div class="elder-contacts" id="elderPeopleList" aria-label="固定联系人"></div>
             </div>
           </article>
 
@@ -104,6 +96,11 @@
                 <div class="phone-rule"></div>
                 <div class="inbox-head"><strong>奶奶的回音</strong><span id="messageCount">2 条</span></div>
                 <div class="inbox" id="inbox"></div>
+                <form class="family-message-form" id="familyMessageForm">
+                  <label for="familyMessageInput">给奶奶留一句话</label>
+                  <textarea id="familyMessageInput" rows="2" placeholder="例如：今天的花好看吗？"></textarea>
+                  <button type="submit">发给奶奶</button>
+                </form>
               </div>
             </div>
           </article>
@@ -139,6 +136,6 @@
     <audio id="recordingPlayer" controls hidden></audio>
   </dialog>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

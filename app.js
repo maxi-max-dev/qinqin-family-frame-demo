@@ -35,13 +35,14 @@
 
   function initialState() {
     return {
-      photos: photoDefaults.map(photo => ({ ...photo })),
+      photos: photoDefaults.map((photo, index) => ({ ...photo, unread: index === 0 })),
       currentPhoto: 0,
       messages: [
-        { id: 'welcome-1', text: '看到了，花真好看。', from: '奶奶', time: '今天 · 09:38' },
-        { id: 'welcome-2', text: '吃饭了吗？记得别忙太晚。', from: '奶奶', time: '昨天 · 20:11' }
+        { id: 'welcome-1', text: '看到了，花真好看。', from: '奶奶', time: '今天 · 09:38', unread: false },
+        { id: 'welcome-2', text: '吃饭了吗？记得别忙太晚。', from: '奶奶', time: '昨天 · 20:11', unread: false }
       ],
-      lastSender: 'grandson'
+      lastSender: 'grandson',
+      callActive: false
     };
   }
 
@@ -49,7 +50,11 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved && Array.isArray(saved.photos) && Array.isArray(saved.messages)) {
-        return { ...initialState(), ...saved, currentPhoto: Number(saved.currentPhoto) || 0 };
+        const migrated = { ...initialState(), ...saved, currentPhoto: Number(saved.currentPhoto) || 0 };
+        migrated.photos = migrated.photos.map((photo, index) => ({ ...photo, unread: typeof photo.unread === 'boolean' ? photo.unread : index === 0 }));
+        migrated.messages = migrated.messages.map(message => ({ ...message, direction: message.direction || (message.from === '奶奶' ? 'outgoing' : 'incoming'), unread: message.direction === 'outgoing' || message.from === '奶奶' ? false : Boolean(message.unread) }));
+        migrated.callActive = Boolean(migrated.callActive);
+        return migrated;
       }
     } catch (error) {
       console.info('读取本机演示数据失败，将使用示例内容。', error);
@@ -95,16 +100,82 @@
     renderInbox();
     $('#messageCount').textContent = `${state.messages.length} 条`;
     $('#photoCount').textContent = `${state.photos.length} 张`;
+    renderReminder();
     if (selectedFile) renderUploadPreview();
   }
 
+  function currentReminder() {
+    if (state.callActive) return { kind: 'call', text: '有人正在来电 · 这是演示通话', action: '看看来电' };
+    if (state.messages.some(message => message.unread && message.direction !== 'outgoing')) return { kind: 'message', text: '有一条新留言', action: '我听到了' };
+    if (state.photos.some(photo => photo.unread)) return { kind: 'photo', text: '有一张新照片', action: '我看到了' };
+    return null;
+  }
+
+  function renderReminder() {
+    const reminder = currentReminder();
+    const banner = $('#reminderBanner');
+    const ring = $('#reminderRing');
+    if (!banner || !ring) return;
+    banner.hidden = !reminder;
+    banner.className = `reminder-banner${reminder ? ` is-${reminder.kind}` : ''}`;
+    ring.className = `reminder-ring${reminder ? ` is-${reminder.kind}` : ''}`;
+    if (!reminder) return;
+    $('#reminderText').textContent = reminder.text;
+    $('#reminderAction').textContent = reminder.action;
+  }
+
+  function confirmReminder() {
+    const reminder = currentReminder();
+    if (!reminder) return;
+    if (reminder.kind === 'call') {
+      openCall(state.lastSender || 'grandson');
+      return;
+    }
+    if (reminder.kind === 'message') {
+      const message = state.messages.find(item => item.unread && item.direction !== 'outgoing');
+      if (message?.photoId) {
+        const index = state.photos.findIndex(photo => photo.id === message.photoId);
+        if (index >= 0) state.currentPhoto = index;
+      }
+      if (message) message.unread = false;
+      persist('确认留言');
+      showToast('留言已确认');
+    } else {
+      const photo = state.photos.find(item => item.unread);
+      if (photo) state.currentPhoto = state.photos.indexOf(photo);
+      if (photo) photo.unread = false;
+      persist('确认照片');
+      showToast('照片已看过');
+    }
+    renderAll();
+  }
+
+  function triggerDemo(kind) {
+    if (kind === 'photo') {
+      state.photos[0].unread = true;
+      state.currentPhoto = 0;
+      showToast('演示：新照片到了');
+    } else if (kind === 'message') {
+      const message = { id: `demo-message-${Date.now()}`, text: '今天吃饭了吗？', from: '孙子 · 小宇', to: '奶奶', direction: 'incoming', time: '刚刚', photoId: state.photos[state.currentPhoto]?.id, unread: true };
+      state.messages.unshift(message);
+      showToast('演示：新留言到了');
+    } else {
+      state.callActive = true;
+      showToast('演示：有人来电');
+    }
+    persist(`演示${kind}`);
+    renderAll();
+  }
+
   function renderPeople() {
-    $('#peopleList').innerHTML = people.map(person => `
+    const markup = people.map(person => `
       <button class="person-row" type="button" data-call="${person.id}" aria-label="呼叫${person.name} ${person.detail}">
         <span class="person-avatar ${person.avatar}">${person.initial}</span>
         <span class="person-copy"><strong>${person.name}</strong><small>${person.detail}</small></span>
         <span class="call-symbol" aria-hidden="true">☎</span>
       </button>`).join('');
+    $('#peopleList').innerHTML = markup;
+    $('#elderPeopleList').innerHTML = markup;
   }
 
   function renderActivities() {
@@ -126,12 +197,14 @@
     $('#photoTag').textContent = `来自${photo.senderName.split(' · ')[0]}`;
     $('#photoPosition').textContent = `${state.currentPhoto + 1} / ${state.photos.length}`;
     $('#photoTime').textContent = photo.time;
-    $('#audioLabel').textContent = photo.audio ? `收到一段来自${photo.senderName.split(' · ')[0]}的语音留言` : '听这张照片的介绍 / 朗读文字';
+    if ($('#audioLabel')) $('#audioLabel').textContent = photo.audio ? `收到一段来自${photo.senderName.split(' · ')[0]}的语音留言` : '听这张照片的介绍 / 朗读文字';
   }
 
   function renderInbox() {
-    $('#inbox').innerHTML = state.messages.slice(0, 4).map(message => `
-      <article class="inbox-item"><p>${escapeHtml(message.text)}</p><small>${escapeHtml(message.from)} · ${escapeHtml(message.time)}${message.audio ? ' · 有录音' : ''}</small>${message.audio ? `<button class="text-button play-message" type="button" data-message-id="${escapeAttribute(message.id)}">▶ 播放录音</button>` : ''}</article>`).join('');
+    $('#inbox').innerHTML = state.messages.slice(0, 4).map(message => {
+      const photo = message.photoId && state.photos.find(item => item.id === message.photoId);
+      return `<article class="inbox-item"><p>${escapeHtml(message.text)}</p><small>${escapeHtml(message.from)} · ${escapeHtml(message.time)}${message.audio ? ' · 有录音' : ''}</small>${photo ? `<div class="message-photo-context"><img src="${escapeAttribute(photo.src)}" alt=""><span>关于：${escapeHtml(photo.caption)}</span></div>` : ''}${message.audio ? `<button class="text-button play-message" type="button" data-message-id="${escapeAttribute(message.id)}">▶ 播放录音</button>` : ''}</article>`;
+    }).join('');
   }
 
   function setMode(mode) {
@@ -143,6 +216,7 @@
     $('#familyPreview').hidden = !familyVisible;
     $('#stageLabel').textContent = mode === 'split' ? '双端同屏' : mode === 'family' ? '家人的手机' : '奶奶的相框';
     $('#devices').classList.toggle('is-split', mode === 'split');
+    $('#workspace').className = `workspace is-${mode}`;
   }
 
   function movePhoto(delta) {
@@ -169,8 +243,10 @@
   function listenCurrent() {
     const photo = state.photos[state.currentPhoto];
     const wave = $('.sound-wave');
-    wave.classList.add('is-playing');
-    window.setTimeout(() => wave.classList.remove('is-playing'), 2300);
+    if (wave) {
+      wave.classList.add('is-playing');
+      window.setTimeout(() => wave.classList.remove('is-playing'), 2300);
+    }
     speakText(`${photo.senderName}说：${photo.caption}`);
   }
 
@@ -262,7 +338,7 @@
     if (!selectedFile) { $('#uploadFeedback').textContent = '请先选一张照片。'; $('#uploadFeedback').classList.remove('is-good'); return; }
     const sender = people.find(person => person.id === $('#senderSelect').value) || people[0];
     const caption = $('#photoDescription').value.trim() || '今天也想和你分享一点日常。';
-    const photo = { id: `local-${Date.now()}`, src: selectedFile.dataUrl, caption, sender: sender.id, senderName: `${sender.name} · ${sender.detail.split(' · ')[0]}`, time: '刚刚' };
+    const photo = { id: `local-${Date.now()}`, src: selectedFile.dataUrl, caption, sender: sender.id, senderName: `${sender.name} · ${sender.detail.split(' · ')[0]}`, time: '刚刚', unread: true };
     state.photos.unshift(photo);
     state.currentPhoto = 0;
     state.lastSender = sender.id;
@@ -282,7 +358,7 @@
   function saveMessage() {
     const text = $('#messageInput').value.trim();
     if (!text && !pendingRecording) { $('#messageFeedback').textContent = '写一句话，或者先录一段声音。'; return; }
-    const message = { id: `message-${Date.now()}`, text: text || '（一段来自奶奶的声音）', from: '奶奶', time: '刚刚' };
+    const message = { id: `message-${Date.now()}`, text: text || '（一段来自奶奶的声音）', from: '奶奶', to: '家人', direction: 'outgoing', time: '刚刚', photoId: state.photos[state.currentPhoto]?.id, unread: false };
     if (pendingRecording) { message.audio = pendingRecording; }
     state.messages.unshift(message);
     if (!persist('保存留言')) { state.messages.shift(); return; }
@@ -290,9 +366,21 @@
     $('#recordingPlayer').hidden = true;
     $('#messageInput').value = '';
     closeDialog('#messageModal');
-    renderInbox();
-    $('#messageCount').textContent = `${state.messages.length} 条`;
+    renderAll();
     showToast('留言已送到家人的手机');
+  }
+
+  function sendFamilyMessage(event) {
+    event.preventDefault();
+    const input = $('#familyMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const message = { id: `family-message-${Date.now()}`, text, from: '孙子 · 小宇', to: '奶奶', direction: 'incoming', time: '刚刚', photoId: state.photos[state.currentPhoto]?.id, unread: true };
+    state.messages.unshift(message);
+    if (!persist('家人发送留言')) { state.messages.shift(); return; }
+    input.value = '';
+    renderAll();
+    showToast('留言已送到奶奶的相框');
   }
 
   async function startRecording() {
@@ -422,17 +510,6 @@
     try { recognition.start(); } catch (error) { finishVoiceRecognition({ showExamples: true, message: '语音识别暂时不可用，可以点示例语句继续。' }); }
   }
 
-  function runDemo() {
-    demoTimers.forEach(window.clearTimeout); demoTimers = [];
-    setMode('split');
-    state.currentPhoto = 0; renderPhotos();
-    showToast('第 1 步 · 小宇正在发一张照片');
-    demoTimers.push(window.setTimeout(() => { setMode('elder'); showToast('第 2 步 · 奶奶看到了，也听到了'); listenCurrent(); }, 1500));
-    demoTimers.push(window.setTimeout(() => { openMessage('看到了，花真好看。'); showToast('第 3 步 · 奶奶准备回一句话'); }, 4000));
-    demoTimers.push(window.setTimeout(() => { closeDialog('#messageModal'); showToast('第 4 步 · 留言已回到小宇的手机'); }, 7200));
-    demoTimers.push(window.setTimeout(() => { setMode('family'); openCall('grandson'); $('#callStatus').textContent = '可以接听、挂断或转留言'; }, 8500));
-  }
-
   function resetData() {
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) { /* ignore */ }
     state = initialState(); selectedFile = null; pendingRecording = null;
@@ -449,16 +526,20 @@
   $('#speakBtn').addEventListener('click', () => openMessage());
   $('#listenBtn').addEventListener('click', listenCurrent);
   $('#voiceBtn').addEventListener('click', voiceCommand);
-  $('#demoBtn').addEventListener('click', runDemo);
+  $$('.demo-controls [data-demo]').forEach(button => button.addEventListener('click', () => triggerDemo(button.dataset.demo)));
+  $('#reminderAction').addEventListener('click', confirmReminder);
   $('#resetBtn').addEventListener('click', resetData);
   $('#photoInput').addEventListener('change', event => handleFile(event.target.files?.[0]));
   $('#uploadForm').addEventListener('submit', sendPhoto);
+  $('#familyMessageForm').addEventListener('submit', sendFamilyMessage);
   $('#peopleList').addEventListener('click', event => { const button = event.target.closest('[data-call]'); if (button) openCall(button.dataset.call); });
+  $('#elderPeopleList').addEventListener('click', event => { const button = event.target.closest('[data-call]'); if (button) openCall(button.dataset.call); });
   $('#activityList').addEventListener('click', event => { const button = event.target.closest('[data-photo-id]'); const index = state.photos.findIndex(photo => photo.id === button?.dataset.photoId); if (index >= 0) { state.currentPhoto = index; persist('选择照片'); renderPhotos(); } });
   $('#voiceExamples').addEventListener('click', event => { const button = event.target.closest('[data-command]'); if (button) runVoiceCommand(button.dataset.command); });
+  $('#voiceExamples').addEventListener('click', event => { if (event.target.closest('.close-examples')) $('#voiceExamples').hidden = true; });
   $('#closeCallBtn').addEventListener('click', () => closeDialog('#callModal'));
-  $('#answerCallBtn').addEventListener('click', () => callStatus('已接听 · 这是演示通话'));
-  $('#hangupCallBtn').addEventListener('click', () => callStatus('已挂断 · 没有拨出真实电话'));
+  $('#answerCallBtn').addEventListener('click', () => { state.callActive = false; persist('接听演示来电'); renderAll(); callStatus('已接听 · 这是演示通话'); });
+  $('#hangupCallBtn').addEventListener('click', () => { state.callActive = false; persist('结束演示来电'); renderAll(); callStatus('已挂断 · 没有拨出真实电话'); });
   $('#leaveMessageBtn').addEventListener('click', () => { closeDialog('#callModal'); openMessage('刚才没接到你的电话，给你留句话。'); });
   $('#closeMessageBtn').addEventListener('click', () => closeDialog('#messageModal'));
   $('#saveMessageBtn').addEventListener('click', saveMessage);
